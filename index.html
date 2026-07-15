@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -155,7 +156,19 @@
             <h1 class="text-2xl font-bold">Cases & Billing</h1>
             <p class="text-sm" style="color:var(--sub)">Live data — shared instantly with everyone signed in</p>
           </div>
-          <button onclick="openCaseModal()" class="btn btn-gold btn-sm"><i class="fa-solid fa-plus"></i>New Case</button>
+          <div class="flex gap-2">
+            <button onclick="exportCasesExcel()" class="btn btn-outline btn-sm"><i class="fa-solid fa-file-excel"></i>Excel</button>
+            <button onclick="exportCasesPDF()" class="btn btn-outline btn-sm"><i class="fa-solid fa-file-pdf"></i>PDF</button>
+            <button onclick="openCaseModal()" class="btn btn-gold btn-sm"><i class="fa-solid fa-plus"></i>New Case</button>
+          </div>
+        </div>
+        <div class="card p-4 mb-4">
+          <p class="text-xs font-semibold mb-2" style="color:var(--sub)">Filter by date opened</p>
+          <div class="flex flex-wrap items-end gap-3">
+            <div><label class="text-xs block mb-1" style="color:var(--sub)">From</label><input id="case-date-from" type="date" onchange="caseDateFilter.from=this.value; renderCaseTable()" class="px-3 py-2 rounded-lg text-sm"/></div>
+            <div><label class="text-xs block mb-1" style="color:var(--sub)">To</label><input id="case-date-to" type="date" onchange="caseDateFilter.to=this.value; renderCaseTable()" class="px-3 py-2 rounded-lg text-sm"/></div>
+            <button onclick="document.getElementById('case-date-from').value=''; document.getElementById('case-date-to').value=''; caseDateFilter={from:'',to:''}; renderCaseTable();" class="btn btn-ghost btn-sm">Clear</button>
+          </div>
         </div>
         <div class="card p-4">
           <div class="overflow-x-auto"><table class="data-table" id="cases-table"><tbody><tr><td class="text-center py-8" style="color:var(--sub)">Loading…</td></tr></tbody></table></div>
@@ -169,7 +182,11 @@
             <h1 class="text-2xl font-bold">Expenses</h1>
             <p class="text-sm" style="color:var(--sub)">Track and approve firm spending — live from the database</p>
           </div>
-          <button onclick="openExpenseModal()" class="btn btn-gold btn-sm"><i class="fa-solid fa-plus"></i>Add Expense</button>
+          <div class="flex gap-2">
+            <button onclick="exportExpensesExcel()" class="btn btn-outline btn-sm"><i class="fa-solid fa-file-excel"></i>Excel</button>
+            <button onclick="exportExpensesPDF()" class="btn btn-outline btn-sm"><i class="fa-solid fa-file-pdf"></i>PDF</button>
+            <button onclick="openExpenseModal()" class="btn btn-gold btn-sm"><i class="fa-solid fa-plus"></i>Add Expense</button>
+          </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" id="exp-stats">
           <div class="card p-4 text-center text-sm" style="color:var(--sub)">Loading…</div>
@@ -177,6 +194,14 @@
         <div class="flex flex-wrap gap-3 mb-2">
           <select id="exp-category-filter" onchange="expFilter.category=this.value; renderExpenseGrid()" class="px-3 py-2 rounded-lg text-sm"></select>
           <select id="exp-status-filter" onchange="expFilter.status=this.value; renderExpenseGrid()" class="px-3 py-2 rounded-lg text-sm"></select>
+        </div>
+        <div class="card p-4 mb-4">
+          <p class="text-xs font-semibold mb-2" style="color:var(--sub)">Filter by expense date</p>
+          <div class="flex flex-wrap items-end gap-3">
+            <div><label class="text-xs block mb-1" style="color:var(--sub)">From</label><input id="exp-date-from" type="date" onchange="expFilter.from=this.value; renderExpenseGrid()" class="px-3 py-2 rounded-lg text-sm"/></div>
+            <div><label class="text-xs block mb-1" style="color:var(--sub)">To</label><input id="exp-date-to" type="date" onchange="expFilter.to=this.value; renderExpenseGrid()" class="px-3 py-2 rounded-lg text-sm"/></div>
+            <button onclick="document.getElementById('exp-date-from').value=''; document.getElementById('exp-date-to').value=''; expFilter.from=''; expFilter.to=''; renderExpenseGrid();" class="btn btn-ghost btn-sm">Clear</button>
+          </div>
         </div>
         <p class="text-xs mb-4" style="color:var(--sub)">Showing pending expenses awaiting action. Approved and rejected expenses move out of this view automatically — switch the status filter above to see them.</p>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="expenses-grid"></div>
@@ -189,10 +214,22 @@
             <h1 class="text-2xl font-bold">Cash Book</h1>
             <p class="text-sm" style="color:var(--sub)">A running record of every shilling in and out of the firm — live from the database</p>
           </div>
-          <button onclick="openCashEntryModal()" class="btn btn-gold btn-sm"><i class="fa-solid fa-plus"></i>Add Entry</button>
+          <div class="flex gap-2">
+            <button onclick="exportCashbookExcel()" class="btn btn-outline btn-sm"><i class="fa-solid fa-file-excel"></i>Excel</button>
+            <button onclick="exportCashbookPDF()" class="btn btn-outline btn-sm"><i class="fa-solid fa-file-pdf"></i>PDF</button>
+            <button onclick="openCashEntryModal()" class="btn btn-gold btn-sm"><i class="fa-solid fa-plus"></i>Add Entry</button>
+          </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" id="cb-stats">
           <div class="card p-4 text-center text-sm" style="color:var(--sub)">Loading…</div>
+        </div>
+        <div class="card p-4 mb-4">
+          <p class="text-xs font-semibold mb-2" style="color:var(--sub)">Filter by date</p>
+          <div class="flex flex-wrap items-end gap-3">
+            <div><label class="text-xs block mb-1" style="color:var(--sub)">From</label><input id="cb-date-from" type="date" onchange="cashbookDateFilter.from=this.value; renderCashbookTable()" class="px-3 py-2 rounded-lg text-sm"/></div>
+            <div><label class="text-xs block mb-1" style="color:var(--sub)">To</label><input id="cb-date-to" type="date" onchange="cashbookDateFilter.to=this.value; renderCashbookTable()" class="px-3 py-2 rounded-lg text-sm"/></div>
+            <button onclick="document.getElementById('cb-date-from').value=''; document.getElementById('cb-date-to').value=''; cashbookDateFilter={from:'',to:''}; renderCashbookTable();" class="btn btn-ghost btn-sm">Clear</button>
+          </div>
         </div>
         <div class="card p-4">
           <div class="flex flex-wrap gap-3 mb-4">
@@ -284,7 +321,7 @@ function vatBreakdown(chargedInclusive){
 }
 function caseEvents(c){ return (c.events||[]).slice().sort((a,b)=> new Date(a.event_date) - new Date(b.event_date)); }
 const EXPENSE_CATEGORIES = ["Filing Fees","Office Rent","Travel & Transport","Stationery","Utilities","Court Fees","Staff Welfare","Software Subscriptions","Marketing","Professional Dues"];
-let expFilter = { category:"All", status:"Pending" };
+let expFilter = { category:"All", status:"Pending", from:"", to:"" };
 
 // ============ AUTH ============
 async function doLogin(){
@@ -344,10 +381,15 @@ async function loadCases(){
   CASES = data;
   renderCaseTable();
 }
+let caseDateFilter = { from:"", to:"" };
+function getFilteredCases(){
+  return CASES.filter(c=>inDateRange(c.opened, caseDateFilter.from, caseDateFilter.to));
+}
 function renderCaseTable(){
+  const rows = getFilteredCases();
   document.getElementById("cases-table").innerHTML = `
     <thead><tr><th>Case No.</th><th>Client</th><th>Practice Area</th><th>Charged</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
-    <tbody>${CASES.map(c=>{
+    <tbody>${rows.map(c=>{
       const paid=casePaid(c), bal=caseBalance(c);
       return `<tr>
         <td class="font-medium">${c.number}</td><td>${c.client}</td><td class="text-xs">${c.area}</td>
@@ -360,7 +402,16 @@ function renderCaseTable(){
           ${isManagingPartner()? `<button onclick="confirmDeleteCase('${c.id}')" class="icon-btn !w-7 !h-7 hover:!text-red-500" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>`:""}
         </div></td>
       </tr>`;
-    }).join("") || `<tr><td colspan="8" class="text-center py-8" style="color:var(--sub)">No cases yet.</td></tr>`}</tbody>`;
+    }).join("") || `<tr><td colspan="8" class="text-center py-8" style="color:var(--sub)">No cases match this date range.</td></tr>`}</tbody>`;
+}
+function exportCasesExcel(){
+  const rows = getFilteredCases().map(c=>[c.number, c.client, c.area, fmtDate(c.opened), Number(c.charged), Number(casePaid(c)), Number(caseBalance(c)), c.status]);
+  exportToExcel("Cases_Billing", ["Case No.","Client","Practice Area","Opened","Charged","Paid","Balance","Status"], rows);
+}
+function exportCasesPDF(){
+  const rows = getFilteredCases().map(c=>[c.number, c.client, c.area, fmtDate(c.opened), fmtKES(c.charged), fmtKES(casePaid(c)), fmtKES(caseBalance(c)), c.status]);
+  const subtitle = (caseDateFilter.from||caseDateFilter.to) ? `${caseDateFilter.from?fmtDate(caseDateFilter.from):"Start"} to ${caseDateFilter.to?fmtDate(caseDateFilter.to):"Present"}` : "All cases";
+  exportReportPDF("Cases & Billing Report", subtitle, ["Case No.","Client","Practice Area","Opened","Charged","Paid","Balance","Status"], rows, "Cases_Billing");
 }
 function openModal(html){ document.getElementById("modal-root").innerHTML = `<div class="modal-backdrop active" onclick="if(event.target===this) closeModal()"><div class="modal-box">${html}</div></div>`; }
 function closeModal(){ document.getElementById("modal-root").innerHTML = ""; }
@@ -529,6 +580,85 @@ async function downloadReceiptPDF(caseId, paymentId){
     toast("PDF generation failed", "Please try the Print option instead", "warning");
   });
 }
+
+// ============ GENERIC REPORT EXPORTS (Excel / PDF) — reused by Cases, Expenses, Cash Book ============
+function exportToExcel(filenamePrefix, headers, rows){
+  if(typeof XLSX === "undefined"){ toast("Excel engine unavailable", "Please try again in a moment", "warning"); return; }
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Report");
+  const filename = filenamePrefix + "_" + new Date().toISOString().slice(0,10) + ".xlsx";
+  XLSX.writeFile(wb, filename);
+  toast("Excel downloaded", filename + " saved to your device", "success");
+}
+function buildReportLetterheadHTML(title, subtitle){
+  return `
+    <div style="display:flex;justify-content:center;align-items:center;margin-bottom:4mm;"><img src="${LOGO_DATA_URI_PNG}" style="width:35mm;display:block;"/></div>
+    <div style="text-align:center;margin-bottom:5mm;">
+      <p style="font-size:10px;color:#5b6472;margin:0;line-height:1.5;">Mugumo House Along, Muringa-Messacco Street, Chuka<br/>Tel: 0712 262432</p>
+    </div>
+    <div style="text-align:center;border-top:1px solid #e7eaee;border-bottom:1px solid #e7eaee;padding:8px 0;margin-bottom:5mm;">
+      <p style="font-size:15px;font-weight:700;letter-spacing:1.5px;margin:0;color:#0B1F3A;">${title.toUpperCase()}</p>
+      ${subtitle? `<p style="font-size:10px;color:#5b6472;margin:2px 0 0;">${subtitle}</p>` : ""}
+    </div>`;
+}
+function buildReportTableHTML(headers, rows){
+  return `<table style="width:100%;border-collapse:collapse;font-size:10px;font-family:Inter,Arial,sans-serif;color:#101828;">
+    <thead><tr>${headers.map(h=>`<th style="text-align:left;padding:6px 8px;border-bottom:2px solid #0B1F3A;color:#0B1F3A;font-size:9px;text-transform:uppercase;letter-spacing:.4px;">${h}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map((r,i)=>`<tr style="background:${i%2?'#f5f7fa':'#ffffff'};">${r.map(c=>`<td style="padding:5px 8px;border-bottom:1px solid #e7eaee;">${c}</td>`).join("")}</tr>`).join("")}</tbody>
+  </table>`;
+}
+function exportReportPDF(title, subtitle, headers, rows, filenamePrefix){
+  if(typeof html2canvas === "undefined" || typeof window.jspdf === "undefined"){
+    toast("PDF engine unavailable", "Falling back to Excel instead", "warning");
+    exportToExcel(filenamePrefix, headers, rows);
+    return;
+  }
+  const container = document.createElement("div");
+  container.style.position = "fixed"; container.style.left = "-9999px"; container.style.top = "0";
+  container.style.background = "#fff"; container.style.padding = "15mm"; container.style.width = "200mm";
+  container.innerHTML = buildReportLetterheadHTML(title, subtitle) + buildReportTableHTML(headers, rows) +
+    `<p style="text-align:center;font-size:9px;color:#5b6472;margin-top:6mm;">Generated ${new Date().toLocaleString("en-KE")} · CK Mutegi &amp; Company Advocates · System-generated report</p>`;
+  document.body.appendChild(container);
+  toast("Generating PDF", "Please wait a moment...", "info");
+  html2canvas(container, { scale: 2.5, backgroundColor:"#ffffff" }).then(canvas=>{
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit:"mm", format:"a4", orientation:"portrait" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const marginTop = 10, marginBottom = 10;
+    const usablePageHeight = pageHeight - marginTop - marginBottom;
+    const imgWidthMM = pageWidth - 20;
+    const imgHeightMM = canvas.height * imgWidthMM / canvas.width;
+    const imgData = canvas.toDataURL("image/png");
+    let heightLeft = imgHeightMM;
+    let position = marginTop;
+    pdf.addImage(imgData, "PNG", 10, position, imgWidthMM, imgHeightMM);
+    heightLeft -= usablePageHeight;
+    while(heightLeft > 0){
+      position = marginTop - (imgHeightMM - heightLeft);
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 10, position, imgWidthMM, imgHeightMM);
+      heightLeft -= usablePageHeight;
+    }
+    pdf.save(filenamePrefix + "_" + new Date().toISOString().slice(0,10) + ".pdf");
+    document.body.removeChild(container);
+    toast("PDF downloaded", filenamePrefix+" report saved", "success");
+  }).catch(()=>{
+    document.body.removeChild(container);
+    toast("PDF generation failed", "Falling back to Excel instead", "warning");
+    exportToExcel(filenamePrefix, headers, rows);
+  });
+}
+// Simple date-range check used by the filters on Cases, Expenses, and Cash Book
+function inDateRange(dateStr, fromStr, toStr){
+  if(!dateStr) return true;
+  const d = new Date(dateStr);
+  if(fromStr && d < new Date(fromStr)) return false;
+  if(toStr && d > new Date(toStr+"T23:59:59")) return false;
+  return true;
+}
+
 function openCaseDetailModal(caseId){
   const c = CASES.find(x=>x.id===caseId);
   if(!c) return;
@@ -787,8 +917,11 @@ function renderExpenseStats(){
     <div class="card p-4"><p class="text-xs" style="color:var(--sub)">Approved</p><p class="text-xl font-bold" style="color:var(--success)">${fmtKES(approved)}</p></div>
     <div class="card p-4"><p class="text-xs" style="color:var(--sub)">Awaiting Approval</p><p class="text-xl font-bold" style="color:var(--warning)">${fmtKES(pending)}</p></div>`;
 }
+function getFilteredExpenses(){
+  return EXPENSES.filter(e=>(expFilter.category==="All"||e.category===expFilter.category)&&(expFilter.status==="All"||e.status===expFilter.status)&&inDateRange(e.expense_date, expFilter.from, expFilter.to));
+}
 function renderExpenseGrid(){
-  const list = EXPENSES.filter(e=>(expFilter.category==="All"||e.category===expFilter.category)&&(expFilter.status==="All"||e.status===expFilter.status));
+  const list = getFilteredExpenses();
   document.getElementById("expenses-grid").innerHTML = list.map((e,i)=>`
     <div class="card p-4" style="animation-delay:${i*40}ms">
       <div class="flex justify-between items-start"><div><p class="font-bold text-sm">${e.ref}</p><p class="text-xs" style="color:var(--sub)">${e.category}</p></div>${expenseBadge(e.status)}</div>
@@ -806,6 +939,15 @@ function renderExpenseGrid(){
         <button onclick="confirmDeleteExpense('${e.id}')" class="icon-btn !w-8 !h-8 hover:!text-red-500" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
       </div>` : ""}
     </div>`).join("") || `<p class="col-span-full text-center py-10" style="color:var(--sub)">No expenses match these filters.</p>`;
+}
+function exportExpensesExcel(){
+  const rows = getFilteredExpenses().map(e=>[e.ref, e.category, Number(e.amount), fmtDate(e.expense_date), e.status, e.submitted_by]);
+  exportToExcel("Expenses", ["Ref","Category","Amount","Date","Status","Submitted By"], rows);
+}
+function exportExpensesPDF(){
+  const rows = getFilteredExpenses().map(e=>[e.ref, e.category, fmtKES(e.amount), fmtDate(e.expense_date), e.status, e.submitted_by]);
+  const subtitle = (expFilter.from||expFilter.to) ? `${expFilter.from?fmtDate(expFilter.from):"Start"} to ${expFilter.to?fmtDate(expFilter.to):"Present"}` : "All expenses";
+  exportReportPDF("Expenses Report", subtitle, ["Ref","Category","Amount","Date","Status","Submitted By"], rows, "Expenses");
 }
 function openExpenseModal(){
   const names = ["Carol Mutegi","Mercy Wanjiru"];
@@ -866,24 +1008,29 @@ async function deleteExpense(id){
 // ============ CASH BOOK PAGE (live from the cashbook_ledger view) ============
 let CASHBOOK = [];
 let cashbookFilter = "All";
+let cashbookDateFilter = { from:"", to:"" };
 async function loadCashbook(){
   const { data, error } = await supabaseClient.from("cashbook_ledger").select("*").order("entry_date", { ascending: true }).order("row_id", { ascending: true });
   if(error){ toast("Could not load cash book", error.message, "danger"); return; }
   CASHBOOK = data;
-  renderCashbookStats();
   renderCashbookTable();
 }
+function getFilteredCashbook(){
+  return CASHBOOK.filter(e=>(cashbookFilter==="All"||e.entry_type===cashbookFilter)&&inDateRange(e.entry_date, cashbookDateFilter.from, cashbookDateFilter.to));
+}
 function renderCashbookStats(){
-  const totalIn = CASHBOOK.filter(e=>e.entry_type==="in").reduce((a,e)=>a+Number(e.amount),0);
-  const totalOut = CASHBOOK.filter(e=>e.entry_type==="out").reduce((a,e)=>a+Number(e.amount),0);
+  const filtered = getFilteredCashbook();
+  const totalIn = filtered.filter(e=>e.entry_type==="in").reduce((a,e)=>a+Number(e.amount),0);
+  const totalOut = filtered.filter(e=>e.entry_type==="out").reduce((a,e)=>a+Number(e.amount),0);
   const balance = CASHBOOK.length ? Number(CASHBOOK[CASHBOOK.length-1].running_balance) : 0;
   document.getElementById("cb-stats").innerHTML = `
-    <div class="card p-4"><p class="text-xs" style="color:var(--sub)">Total In</p><p class="text-xl font-bold" style="color:var(--success)">${fmtKES(totalIn)}</p></div>
-    <div class="card p-4"><p class="text-xs" style="color:var(--sub)">Total Out</p><p class="text-xl font-bold" style="color:var(--danger)">${fmtKES(totalOut)}</p></div>
+    <div class="card p-4"><p class="text-xs" style="color:var(--sub)">Total In${(cashbookDateFilter.from||cashbookDateFilter.to)?" (filtered)":""}</p><p class="text-xl font-bold" style="color:var(--success)">${fmtKES(totalIn)}</p></div>
+    <div class="card p-4"><p class="text-xs" style="color:var(--sub)">Total Out${(cashbookDateFilter.from||cashbookDateFilter.to)?" (filtered)":""}</p><p class="text-xl font-bold" style="color:var(--danger)">${fmtKES(totalOut)}</p></div>
     <div class="card p-4"><p class="text-xs" style="color:var(--sub)">Current Balance</p><p class="text-xl font-bold" style="color:${balance>=0?'var(--success)':'var(--danger)'}">${fmtKES(balance)}</p></div>`;
 }
 function renderCashbookTable(){
-  const rows = CASHBOOK.slice().reverse().filter(e=>cashbookFilter==="All"||e.entry_type===cashbookFilter);
+  renderCashbookStats();
+  const rows = getFilteredCashbook().slice().reverse();
   document.getElementById("cashbook-table").innerHTML = `
     <thead><tr><th>Date</th><th>Description</th><th>Money In</th><th>Money Out</th><th>Running Balance</th><th></th></tr></thead>
     <tbody>${rows.map(e=>`<tr>
@@ -893,7 +1040,16 @@ function renderCashbookTable(){
       <td style="color:var(--danger)">${e.entry_type==="out"? fmtKES(e.amount):""}</td>
       <td class="font-semibold">${fmtKES(e.running_balance)}</td>
       <td>${(e.row_id.startsWith("man-") && isManagingPartner())? `<button onclick="confirmDeleteCashEntry('${e.row_id.replace('man-','')}')" class="icon-btn !w-7 !h-7 hover:!text-red-500" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>` : ""}</td>
-    </tr>`).join("") || `<tr><td colspan="6" class="text-center py-8" style="color:var(--sub)">No entries yet.</td></tr>`}</tbody>`;
+    </tr>`).join("") || `<tr><td colspan="6" class="text-center py-8" style="color:var(--sub)">No entries match these filters.</td></tr>`}</tbody>`;
+}
+function exportCashbookExcel(){
+  const rows = getFilteredCashbook().map(e=>[fmtDate(e.entry_date), e.description+(e.method?" ("+e.method+")":""), e.entry_type==="in"?Number(e.amount):"", e.entry_type==="out"?Number(e.amount):"", Number(e.running_balance)]);
+  exportToExcel("Cash_Book", ["Date","Description","Money In","Money Out","Running Balance"], rows);
+}
+function exportCashbookPDF(){
+  const rows = getFilteredCashbook().map(e=>[fmtDate(e.entry_date), e.description+(e.method?" ("+e.method+")":""), e.entry_type==="in"?fmtKES(e.amount):"", e.entry_type==="out"?fmtKES(e.amount):"", fmtKES(e.running_balance)]);
+  const subtitle = (cashbookDateFilter.from||cashbookDateFilter.to) ? `${cashbookDateFilter.from?fmtDate(cashbookDateFilter.from):"Start"} to ${cashbookDateFilter.to?fmtDate(cashbookDateFilter.to):"Present"}` : "Full cash book";
+  exportReportPDF("Cash Book Report", subtitle, ["Date","Description","Money In","Money Out","Running Balance"], rows, "Cash_Book");
 }
 function openCashEntryModal(){
   openModal(`<div class="p-5 border-b" style="border-color:var(--border)"><h3 class="font-bold text-lg">Add Cash Book Entry</h3></div>
